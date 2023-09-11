@@ -1,0 +1,406 @@
+<!DOCTYPE html xmlns:xlink="http://www.w3.org/1999/xlink">
+<meta charset="utf-8">
+<style>
+
+.link {
+  fill: none;
+  /*stroke: #666;*/
+  stroke: rgb(0, 0, 0);
+  stroke-width: 1.5px;
+}
+
+
+/*
+#licensing {
+  fill: green;
+}
+*/
+
+#end {
+  fill: black;
+}
+
+
+/*
+#unknown {
+  fill: blue;
+}
+*/
+
+/*
+.link.licensing {
+  stroke: green;
+}
+*/
+
+/*
+.link.resolved {
+  stroke-dasharray: 0,2 1;
+}
+*/
+
+.link.unknown {
+  stroke: black;
+  stroke-dasharray: 0,2 1;
+}
+
+
+circle {
+  fill: rgb(70, 130, 180);
+  stroke: #333;
+  stroke-width: 1.5px;
+  
+}
+
+text {
+  font: 12px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+
+<script>
+
+var links = [
+  {source: "Data Quality Policy", target: "Defining Metadata", type: "provide principles and policies for the creation and management of Defining Metadata"},
+  {source: "Data Quality Policy", target: "Awareness of Data Quality", type: "guides"},
+  {source: "Data Quality Policy", target: "Data Quality Stakeholder Analysis", type: "considered while managing"},
+  {source: "Data Quality Policy", target: "Data Suppliers", type: "input for"},
+  {source: "Data Quality Policy", target: "Data Quality Objectives", type: "framework for"},
+  {source: "Data Quality Policy", target: "Data Quality Management System", type: "part of"},
+  {source: "Data Quality Requirements", target: "Defining Metadata", type: "provide principles and policies for the creation and management of Defining Metadata"},
+  {source: "Design Processes", target: "Defining Metadata", type: "provide methodologies for the creation and management of Defining Metadata"},  
+  {source: "Defining Metadata", target: "Data Quality Objectives", type: "input for"},
+  {source: "Defining Metadata", target: "Data Quality Rules", type: "input for"},
+  {source: "Defining Metadata", target: "Awareness of Data Quality", type: "input for"},
+  {source: "Defining Metadata", target: "Critical Data Elements", type: "input for"},
+  {source: "Defining Metadata", target: "Data Cleansing", type: "input for"},
+  {source: "Defining Metadata", target: "Data Issues", type: "input for"},
+  {source: "Defining Metadata", target: "Monitoring Data Quality", type: "input for"},
+  {source: "Data Issues", target: "Data Quality Program", type: "preventing of a data issue is a principle of a"},
+  {source: "Data Issues", target: "Data Entry Process", type: "can be caused by"},
+  {source: "Data Issues", target: "Data Quality Service Level Agreement", type: "can be a subject in"},
+  {source: "Data Issues", target: "Data Profiling", type: "identified by"},
+  {source: "Data Issues", target: "Data Stewards", type: "identified and resolved by"},
+  {source: "Data Issues", target: "Correction", type: "are eliminated by"},
+  {source: "Data Issues", target: "Preventive Action", type: "potential cause of data issue is eliminated by"},
+  {source: "Data Issues", target: "Corrective Action", type: "the cause of a data issue is eliminated by a"},
+  {source: "Data Issues", target: "Data Lineage", type: "the cause of a data issue can be investigated by"},
+  {source: "Data Issues", target: "Incident Tracking System", type: "can be tracked by"},
+  {source: "Data Issues", target: "Data Quality Rules", type: "apply"},
+  {source: "Data Issues", target: "Data Cleansing", type: "can be resolved by"},
+  {source: "Data Quality Objectives", target: "Critical Data Elements", type: "xyz"},
+  {source: "Data Quality Policy", target: "Critical Data Elements", type: "input to manage"},
+  {source: "Data Quality Stakeholder Analysis", target: "Critical Data Elements", type: "is considered while managing"},
+  {source: "Critical Data Elements", target: "Data Quality Rules", type: "input to manage"},
+  {source: "Critical Data Elements", target: "Data Cleansing", type: "input for"},
+  {source: "Data Cleansing", target: "Data Issues", type: "resolves"},
+  {source: "Data Cleansing", target: "Data Cleansing Methods", type: "performed by"},
+  {source: "Data Cleansing", target: "Data Quality", type: "improves"},
+  {source: "Monitoring Data Quality", target: "Data Cleansing", type: "can be followed up by"},
+  {source: "Monitoring Data Quality", target: "Critical Data Elements", type: "can be focussed on"},
+  {source: "Monitoring Data Quality", target: "Data Issues", type: "detects and reports"},
+  {source: "Monitoring Data Quality", target: "Data Quality Dimensions", type: "can be applied to various"},
+  {source: "Roles and Responsibilities", target: "Monitoring Data Quality", type: "are assigned regarding"},
+  {source: "Data Quality Rules", target: "Metadata", type: "is subtype of"},
+  {source: "Data Quality Rules", target: "Business Rule", type: "can be derived from"},
+  {source: "Data Quality Rules", target: "Database or Application", type: "is integrated in"},
+  {source: "Data Quality Rules", target: "Data Quality Dimensions", type: "is connected to"},
+  {source: "Awareness of Data Quality", target: "Staff competence", type: "evaluates"},
+  {source: "Awareness of Data Quality", target: "Data Quality Policy", type: "guides"},
+  {source: "Awareness of Data Quality", target: "Roles and Responsibilities", type: "acknowledges"},
+  {source: "Awareness of Data Quality", target: "Risk analysis", type: "applies"},
+  {source: "Awareness of Data Quality", target: "Data Quality Objectives", type: "guide"},
+  {source: "Awareness of Data Quality", target: "Internal Audit", type: "improves"},
+  {source: "Awareness of Data Quality", target: "Communication about Data Quality", type: "improves"},
+  {source: "Leadership", target: "Awareness of Data Quality", type: "guides"},
+  {source: "Data Quality Stakeholder Analysis", target: "Data Quality Policy", type: "is considered while managing"},  
+  {source: "Data Quality Stakeholder Analysis", target: "Data Quality Objectives", type: "is considered while managing"},
+  {source: "Data Lineage", target: "Critical Data Elements", type: "include"},
+  {source: "Data Lineage", target: "Metadata", type: "part of"},
+  {source: "Data Quality Monitoring", target: "Data Issues", type: "detects and reports"},
+  {source: "Monitoring Data Quality", target: "Data Suppliers", type: "monitor source data quality of"}
+];
+
+var nodes = {};
+
+// Associate hyperlinks with nodes:
+
+var urls = [
+
+  {node_name: "Critical Data Elements", hyper_link: "https://datamanagement.wiki/data_management/data_quality/critical_data_elements"},
+  {node_name: "Data Cleansing", hyper_link: "https://datamanagement.wiki/data_management/data_quality/data_cleansing"},
+  {node_name: "Data Lineage", hyper_link: "https://datamanagement.wiki/data_management/data_integration_and_interoperability/data_lineage"},
+  {node_name: "Data Issues", hyper_link: "https://datamanagement.wiki/data_management/data_quality/data_issues"},
+  {node_name: "Awareness of Data Quality", hyper_link: "https://datamanagement.wiki/data_management/data_quality/awareness_of_data_quality"},
+  {node_name: "Monitoring Data Quality", hyper_link: "https://datamanagement.wiki/data_management/data_quality/data_quality_monitoring"},
+  {node_name: "Data Quality Policy", hyper_link: "https://datamanagement.wiki/data_management/data_quality/data_quality_policy"},
+  {node_name: "Data Quality Rules", hyper_link: "https://datamanagement.wiki/data_management/data_quality/data_quality_rules"},
+  {node_name: "Meta Data", hyper_link: "https://datamanagement.wiki/data_management/data_quality/metadata"},
+  {node_name: "Data Quality Stakeholder Analysis", hyper_link: "https://datamanagement.wiki/data_management/data_quality/stakeholder_analysis"}
+
+];
+
+//console.log(urls[2].hyper_link)
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+
+  //console.log(link.source);
+
+});
+
+var width = 1500,
+    height = 900;
+
+var force = d3.layout.force()
+    .nodes(d3.values(nodes))
+    .links(links)
+    .size([width, height])
+    //gravity parameter added:
+    //.gravity(.05)
+    .linkDistance(100) //was: 60
+    .charge(-3000) //was: -300
+    .on("tick", tick)
+    .start();
+
+    // New code:
+    var drag = force.drag()
+      .on("dragstart", function(d) {
+		d3.event.sourceEvent.stopPropagation();
+      });
+    // ------------------
+
+var svg = d3.select("body").append("svg")
+    //.attr("pointer-events", "none") // this is new!
+    .attr("width", width)
+    .attr("height", height)
+    
+    //Added below code for zooming-behaviour:
+    //If the below code for zooming is removed, then insert a ; after the line .attr("height", height)
+  
+   .call(d3.behavior.zoom().scaleExtent([0.5, 4]).on("zoom", function () {
+    svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+  }))
+  .append("g")
+   //-------------
+   //.append("a").attr("xlink:href", function(d) {return "http://www.google.nl";})
+   
+// Per-type markers, as they don't inherit styles.
+svg.append("defs").selectAll("marker")
+    //.data(["suit", "licensing", "resolved"])
+    .data(["unknown"])
+    .data(["end"])
+    .enter().append("marker")
+    .attr("id", function(d) { return d; })
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 15)
+    .attr("refY", -1.5)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5");
+
+
+var path = svg.append("g").selectAll("path")
+    .data(force.links())
+    .enter().append("path")
+    .attr("class", function(d) { return "link " + d.type; })    
+    .attr("marker-end", function(d) { return "url(#" + d.type + ")"; })
+    .attr("marker-end", "url(#end)");
+
+    
+//console.log(hyper_link);
+
+var circle = svg.append("g").selectAll("circle")
+    .data(force.nodes())
+    .enter().append("circle")
+    .attr("r", 6)
+
+    //.style("fill", "blue")
+    //Assign a different color to nodes of special meaning:
+    .style("fill", function(d){
+          
+      if (d.name == "Data Stewards" ) { return "rgb(211,211,211)";}
+      if (d.name == "Database or Application" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality Service Level Agreement" ) { return "rgb(211,211,211)";}
+      if (d.name == "Incident Tracking System" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Entry Process" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality Program" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality Dimension" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality Management System" ) { return "rgb(211,211,211)";}
+      if (d.name == "Business Rule" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality Dimensions" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Quality" ) { return "rgb(211,211,211)";}
+      if (d.name == "Corrective Action" ) { return "rgb(211,211,211)";}
+      if (d.name == "Preventive Action" ) { return "rgb(211,211,211)";}
+      if (d.name == "Correction" ) { return "rgb(211,211,211)";}
+      if (d.name == "Data Cleansing Methods" ) { return "rgb(211,211,211)";}
+    })
+
+    
+    //See: https://p.migdal.pl/wizualizacja-wolnych-lektur/polish_books_themes.html
+    //Added the following double-click event to open hyperlink in new tab:
+
+    .on("dblclick", function(d){
+      
+      var hyper_link;
+
+      if (d.name == "Critical Data Elements" ) { hyper_link = urls[0].hyper_link;}
+      if (d.name == "Data Cleansing" ) { hyper_link = urls[1].hyper_link;}
+      if (d.name == "Data Lineage" ) { hyper_link = urls[2].hyper_link;}
+      if (d.name == "Data Issues" ) { hyper_link = urls[3].hyper_link;}
+      if (d.name == "Awareness of Data Quality" ) { hyper_link = urls[4].hyper_link;}
+      if (d.name == "Monitoring Data Quality" ) { hyper_link = urls[5].hyper_link;}
+      if (d.name == "Data Quality Policy" ) { hyper_link = urls[6].hyper_link;}
+      if (d.name == "Data Quality Rules" ) { hyper_link = urls[7].hyper_link;}
+      if (d.name == "Meta Data" ) { hyper_link = urls[8].hyper_link;}
+      if (d.name == "Data Quality Stakeholder Analysis" ) { hyper_link = urls[9].hyper_link;}
+      
+      ///window.open('http://www.nu.nl/' + d.name + '/','_blank') })
+      window.open(hyper_link,'_blank') })
+
+    // check this code for highlighting nodes and links:
+    // https://coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
+    // https://stackoverflow.com/questions/24538650/force-layout-link-highlight-between-two-nodes
+    // https://stackoverflow.com/search?q=force+layout+highlight+all+nodes+d3&s=b5c2e456-70ab-42f0-94a5-1959493c6c7e
+    // https://stackoverflow.com/questions/18025781/d3-highlight-selected-node-and-its-links-to-parent-and-ancestors-in-a-force-dir    
+    //Added code:
+    //.call(drag)
+    
+    /*.on('mouseover', function(d) {
+
+      //var connectedNodeIds = d3.values(links)//graph
+
+      links.forEach(function(link) {
+
+        if (d.name == link.source)
+            node.attr("r", 6).style("fill", "red")
+            console.log(link.name);
+
+      });
+
+    
+      //console.log(connectedNodeIds);
+      //.path
+      //.filter(x => x.source.id == d.id || x.target.id == d.id)
+      //.map(x => x.source.id == d.id ? x.target.id : x.source.id);
+
+    //d3.select(".nodes")
+      //.selectAll("circle")
+      //.attr("fill", function(c) {
+        //if (connectedNodeIds.indexOf(c.id) > -1 || c.id == d.id) return "red";
+        //else return color(c.group);
+      //});
+  });
+  */
+    
+    .call(drag);
+    
+    
+    /*var drag = force.drag()
+    .on("dragstart", function(d) {
+    d3.event.sourceEvent.stopPropagation(); // to prevent pan functionality from 
+                                            //overriding node drag functionality.
+        
+    });*/
+
+//.append("a").attr("xlink:href", function(d) {return "http://www.cnn.com"})
+
+//Added code, to show tooltip for circles and paths:
+    circle.append("title")
+      .text(function(d) { return d.name; });
+    
+      path.append("title")
+      .text(function(d) { return d.type; });
+
+      
+var text = svg.append("g").selectAll("text")
+    .data(force.nodes())
+    .enter().append("text")
+    .attr("x", 8)
+    .attr("y", ".31em")
+    .text(function(d) { return d.name; });
+
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+  path.attr("d", linkArc);
+  circle.attr("transform", transform);
+  text.attr("transform", transform);
+}
+
+function linkArc(d) {
+  var dx = d.target.x - d.source.x,
+      dy = d.target.y - d.source.y,
+      dr = Math.sqrt(dx * dx + dy * dy);
+  return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+}
+
+function transform(d) {
+  return "translate(" + d.x + "," + d.y + ")";
+}
+
+//------------------------------------------------------------
+/*
+//Toggle stores whether the highlighting is on
+var toggle = 0;
+
+//Create an array logging what is connected to what
+var linkedByIndex = {};
+for (i = 0; i < nodes.length; i++) {
+    linkedByIndex[i + "," + i] = 1;
+};
+path.forEach(function (d) {
+    linkedByIndex[d.source.index + "," + d.target.index] = 1;
+});
+
+//This function looks up whether a pair are neighbours  
+function neighboring(a, b) {
+    return linkedByIndex[a.index + "," + b.index];
+}
+
+function connectedNodes() {
+
+    if (toggle == 0) {
+        //Reduce the opacity of all but the neighbouring nodes
+        d = d3.select(this).node();
+        circle.style("opacity", function (o) {
+            return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
+        });
+        
+        path.style("opacity", function (o) {
+            return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
+        });
+        
+        //Reduce the op
+        
+        toggle = 1;
+    } else {
+        //Put them back to opacity=1
+        circle.style("opacity", 1);
+        path.style("opacity", 1);
+        toggle = 0;
+    }
+
+}
+
+//-------------------------------------------------------------
+*/
+
+
+
+
+//console.log(links[0].source.name);
+//console.log(d3.values(nodes)[0].name);
+//console.log(d3.values(nodes));
+
+</script>
+
+</body>
+</html>
